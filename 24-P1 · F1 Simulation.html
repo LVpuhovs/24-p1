@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>24-P1 · F1 Simulation</title>
+<style>
+:root{--bg:#f4f4f6;--card:#fff;--ink:#15151e;--mute:#6b6b78;--line:#dcdce2;--red:#e10600;--grn:#1a9d4b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0e14;--card:#1a1a24;--ink:#f1f1f5;--mute:#9a9aab;--line:#2f2f3d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e0e14;--card:#1a1a24;--ink:#f1f1f5;--mute:#9a9aab;--line:#2f2f3d;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Titillium Web",system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.logo{font-weight:900;font-size:26px;letter-spacing:-1px;font-style:italic}.logo b{color:var(--red)}
+.tag{color:var(--mute);font-size:13px}
+h2{margin:0 0 4px;font-size:22px}p.s{color:var(--mute);margin:0 0 16px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:.15s}
+button.card:hover{border-color:var(--red);transform:translateY(-2px)}
+.era .y{font-size:26px;font-weight:900;font-style:italic}.era .m{color:var(--mute);font-size:13px}
+.btn{background:var(--red);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:700 15px inherit;font-family:inherit;cursor:pointer}
+.btn.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.slots{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));margin-bottom:18px}
+.slot{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;font-size:12px;min-height:56px}
+.slot.on{border:1px solid var(--red)}.slot.f{border-style:solid;background:var(--card)}
+.slot small{display:block;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;font-size:10px}
+.slot strong{font-size:13px}
+.opt h3{margin:0 0 2px;font-size:16px}.opt .t{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute);margin:4px 0}.bar i{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar u{display:block;height:100%;background:var(--red)}.bar span{width:20px;text-align:right;color:var(--ink)}
+.bar.r u{background:var(--grn)}
+input{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;width:100%;max-width:320px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:14px}.prog u{display:block;height:100%;background:var(--red);transition:.3s}
+.two{display:grid;gap:12px;grid-template-columns:1fr 1fr}@media(max-width:640px){.two{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--mute);font-weight:600;font-size:11px;text-transform:uppercase}
+td:last-child,th:last-child{text-align:right}tr.me td{color:var(--red);font-weight:700}
+.sc{overflow-x:auto}
+.big{font-size:54px;font-weight:900;font-style:italic;color:var(--red);line-height:1}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0}.stats div b{display:block;font-size:22px}.stats div{color:var(--mute);font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+</style></head><body><div class="w">
+<header><div class="logo">24-<b>P1</b></div><div class="tag">F1 simulation · single player</div></header>
+<div id="app"></div></div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),pick=a=>a[RI(0,a.length-1)];
+const G=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.6;
+const P1=[9,6,4,3,2,1],P2=[10,6,4,3,2,1],P3=[10,8,6,5,4,3,2,1],P4=[25,18,15,12,10,8,6,4,2,1];
+const ERAS=[
+{id:'70s',y:'1970s',n:'Cigar-shaped cars, huge risk',races:15,pts:P1,dnf:.22,pool:['Brabham','Lotus','March','Tyrrell','Surtees','Hesketh','Shadow','Penske','Ensign','Wolf','Ligier']},
+{id:'80s',y:'1980s',n:'Turbo monsters, ground effect',races:16,pts:P1,dnf:.2,pool:['Williams','Toleman','Arrows','Osella','Zakspeed','Minardi','Renault','Lola','Rial','Ligier','Tyrrell']},
+{id:'90s',y:'1990s',n:'Active suspension, V10 scream',races:16,pts:P2,dnf:.15,pool:['Jordan','Benetton','Footwork','Larrousse','Sauber','Prost','Simtek','Pacific','Minardi','Tyrrell','Stewart']},
+{id:'00s',y:'2000s',n:'Dominant dynasties, V10/V8',races:17,pts:P3,dnf:.1,pool:['Jaguar','Toyota','BAR','Midland','Super Aguri','Toro Rosso','Sauber','Jordan','Minardi','Honda','Arrows']},
+{id:'10s',y:'2010s',n:'Turbo hybrids arrive',races:20,pts:P4,dnf:.07,pool:['Lotus','Marussia','HRT','Caterham','Force India','Sauber','Toro Rosso','Haas','Manor','Williams','Virgin']},
+{id:'20s',y:'2020s',n:'Ground effect returns',races:22,pts:P4,dnf:.05,pool:['Alpine','Haas','Aston','Alfa','Williams','AlphaTauri','Sauber','Racing Pt','Stake','Visa RB','Cadillac']},
+{id:'26',y:'2026',n:'New era: active aero, 50/50 power',races:24,pts:P4,dnf:.06,pool:['Cadillac','Audi','Haas','Alpine','Williams','Racing Bulls','Aston','Sauber','Apex','Vanta','Nova']}];
+const TRACKS=['Melbourne','Shanghai','Suzuka','Sakhir','Jeddah','Miami','Imola','Monaco','Barcelona','Montréal','Spielberg','Silverstone','Spa','Hungaroring','Zandvoort','Monza','Baku','Singapore','Austin','Mexico City','São Paulo','Las Vegas','Lusail','Yas Marina'];
+const FN=['Marco','Luca','Jack','Henri','Tomas','Alex','Nico','Felipe','Ivan','Kimi','Rafael','Oscar','Dmitri','Emil','Gabriel','Pierre','Sven','Mateo','Jules','Ronan'];
+const LN=['Rossi','Valtteri','Brandt','Moreau','Kessler','Santos','Okafor','Lindqvist','Novak','Duval','Ferrante','Hartley','Ibarra','Kovacs','Ostrander','Petrov','Reyes','Sato','Varga','Weiss'];
+const nm=()=>pick(FN)+' '+pick(LN);
+const pd=x=>{const[a,b]=x.split(':');return{n:a,r:+b}};
+const pt=s=>s.trim().split('\n').map(l=>{const p=l.split(',');return{n:p[0],s:+p[1],k:R(55,92),pts:0,w:0,d:[pd(p[2]),pd(p[3])]}});
+const GRID={
+'70s':{t:pt(`Ferrari,92,Niki Lauda:96,Clay Regazzoni:80
+McLaren,88,James Hunt:92,Jochen Mass:74
+Tyrrell,82,Jody Scheckter:86,Patrick Depailler:82
+Lotus,76,Mario Andretti:88,Gunnar Nilsson:72
+Brabham,74,Carlos Pace:80,Hans-Joachim Stuck:74
+Shadow,70,Tom Pryce:80,Jean-Pierre Jarier:78
+March,68,Ronnie Peterson:90,Vittorio Brambilla:70
+Ligier,72,Jacques Laffite:82,Jean-Pierre Jabouille:76
+Williams,58,Jacky Ickx:80,Michel Leclère:60
+Hesketh,62,Harald Ertl:66,Rupert Keegan:64`),res:['Emerson Fittipaldi:88','Rolf Stommelen:68','Brett Lunger:60'].map(pd)},
+'80s':{t:pt(`Williams,95,Nelson Piquet:92,Nigel Mansell:92
+McLaren,90,Alain Prost:97,Keke Rosberg:84
+Lotus,82,Ayrton Senna:97,Johnny Dumfries:62
+Ferrari,80,Michele Alboreto:82,Stefan Johansson:76
+Benetton,78,Gerhard Berger:84,Teo Fabi:74
+Brabham,70,Riccardo Patrese:80,Derek Warwick:80
+Ligier,68,René Arnoux:80,Jacques Laffite:78
+Tyrrell,62,Martin Brundle:74,Philippe Streiff:70
+Arrows,60,Thierry Boutsen:76,Christian Danner:66
+Minardi,48,Andrea de Cesaris:72,Alessandro Nannini:70`),res:['Eddie Cheever:72','Jonathan Palmer:68','Piercarlo Ghinzani:62'].map(pd)},
+'90s':{t:pt(`Williams,96,Damon Hill:88,Jacques Villeneuve:90
+Ferrari,86,Michael Schumacher:98,Eddie Irvine:80
+Benetton,86,Jean Alesi:86,Gerhard Berger:84
+McLaren,76,Mika Häkkinen:90,David Coulthard:84
+Ligier,66,Olivier Panis:78,Pedro Diniz:68
+Jordan,70,Rubens Barrichello:82,Martin Brundle:76
+Tyrrell,60,Mika Salo:74,Ukyo Katayama:68
+Sauber,66,Johnny Herbert:78,Heinz-Harald Frentzen:84
+Arrows,52,Jos Verstappen:72,Ricardo Rosset:56
+Minardi,46,Giancarlo Fisichella:76,Pedro Lamy:68`),res:['Gianni Morbidelli:70','Luca Badoer:68','Jean-Christophe Boullion:66'].map(pd)},
+'00s':{t:pt(`Ferrari,98,Michael Schumacher:98,Rubens Barrichello:86
+Williams,84,Juan Pablo Montoya:88,Ralf Schumacher:84
+BAR,82,Jenson Button:86,Takuma Sato:78
+Renault,80,Fernando Alonso:94,Jarno Trulli:84
+McLaren,78,Kimi Räikkönen:92,David Coulthard:82
+Sauber,66,Giancarlo Fisichella:82,Felipe Massa:80
+Toyota,66,Cristiano da Matta:76,Olivier Panis:74
+Jaguar,60,Mark Webber:82,Christian Klien:68
+Jordan,50,Nick Heidfeld:78,Giorgio Pantano:64
+Minardi,42,Gianmaria Bruni:62,Zsolt Baumgartner:56`),res:['Ricardo Zonta:70','Jacques Villeneuve:80','Antônio Pizzonia:70'].map(pd)},
+'10s':{t:pt(`Mercedes,98,Lewis Hamilton:97,Valtteri Bottas:88
+Ferrari,92,Sebastian Vettel:90,Charles Leclerc:91
+Red Bull,90,Max Verstappen:95,Pierre Gasly:78
+McLaren,80,Carlos Sainz:85,Lando Norris:84
+Renault,76,Daniel Ricciardo:89,Nico Hülkenberg:83
+Toro Rosso,68,Daniil Kvyat:77,Alexander Albon:80
+Racing Point,70,Sergio Pérez:84,Lance Stroll:74
+Haas,66,Romain Grosjean:76,Kevin Magnussen:78
+Alfa Romeo,64,Kimi Räikkönen:84,Antonio Giovinazzi:72
+Williams,44,George Russell:84,Robert Kubica:78`),res:['Stoffel Vandoorne:76','Pascal Wehrlein:72','Marcus Ericsson:70'].map(pd)},
+'20s':{t:pt(`Red Bull,96,Max Verstappen:97,Sergio Pérez:82
+McLaren,95,Lando Norris:93,Oscar Piastri:90
+Ferrari,94,Charles Leclerc:93,Carlos Sainz:90
+Mercedes,90,Lewis Hamilton:94,George Russell:90
+Aston Martin,78,Fernando Alonso:92,Lance Stroll:76
+Alpine,66,Pierre Gasly:84,Esteban Ocon:82
+Haas,68,Nico Hülkenberg:84,Kevin Magnussen:78
+RB,70,Yuki Tsunoda:82,Daniel Ricciardo:84
+Williams,64,Alexander Albon:84,Logan Sargeant:64
+Sauber,56,Valtteri Bottas:82,Zhou Guanyu:72`),res:['Oliver Bearman:76','Liam Lawson:80','Franco Colapinto:74'].map(pd)},
+'26':{t:pt(`McLaren,92,Lando Norris:94,Oscar Piastri:91
+Mercedes,94,George Russell:92,Kimi Antonelli:84
+Red Bull,90,Max Verstappen:97,Isack Hadjar:76
+Ferrari,90,Charles Leclerc:93,Lewis Hamilton:93
+Williams,76,Alexander Albon:84,Carlos Sainz:90
+Racing Bulls,70,Liam Lawson:80,Arvid Lindblad:68
+Aston Martin,74,Fernando Alonso:92,Lance Stroll:76
+Haas,68,Esteban Ocon:82,Oliver Bearman:78
+Audi,70,Nico Hülkenberg:84,Gabriel Bortoleto:78
+Alpine,66,Pierre Gasly:84,Franco Colapinto:74
+Cadillac,62,Valtteri Bottas:82,Sergio Pérez:82`),res:['Yuki Tsunoda:82','Felipe Drugovich:70','Jack Doohan:70'].map(pd)}};
+const SLOTS=[
+{k:'d1',l:'Driver 1',g:()=>nm()},{k:'d2',l:'Driver 2',g:()=>nm()},
+{k:'tp',l:'Team Principal',g:()=>nm()},
+{k:'car',l:'Car',g:e=>pick(['RX','MK','F','GT','T','V'])+'-'+RI(1,99)+' chassis'},
+{k:'en',l:'Engine',g:e=>pick(['Vortex','Ferrant','Ignis','Kestrel','Tempest','Argent'])+' '+pick(['V10','V8','V12','V6T','PU'])},
+{k:'st',l:'Strategy Team',g:()=>pick(['Pit Wall','Data Lab','Oracle','Tactics','Delta'])+' '+pick(['Group','Unit','Desk','Crew'])},
+{k:'pc',l:'Pit Crew',g:()=>pick(['Quickfire','Redline','Torque','Apex','Pitlane'])+' '+pick(['Crew','Squad','Ops'])}];
+const CN={'Max Verstappen':95,'Lewis Hamilton':94,'Michael Schumacher':96,'Alain Prost':94,'Niki Lauda':93,'Fernando Alonso':93,'Ayrton Senna':86,'Nelson Piquet':84,'Nigel Mansell':78,'James Hunt':76,'Mario Andretti':85,'Ronnie Peterson':80,'Jody Scheckter':82,'Sebastian Vettel':85,'Charles Leclerc':82,'Lando Norris':88,'Oscar Piastri':91,'George Russell':88,'Carlos Sainz':90,'Valtteri Bottas':86,'Kimi Räikkönen':86,'Jacques Villeneuve':80,'Damon Hill':84,'Mika Häkkinen':88,'David Coulthard':85,'Rubens Barrichello':86,'Juan Pablo Montoya':76,'Jenson Button':87,'Daniel Ricciardo':82,'Sergio Pérez':80,'Nico Hülkenberg':84,'Kimi Antonelli':76,'Gerhard Berger':82,'Jean Alesi':74,'Heinz-Harald Frentzen':78,'Clay Regazzoni':74,'Alexander Albon':84,'Yuki Tsunoda':74,'Pierre Gasly':80,'Esteban Ocon':82,'Lance Stroll':72};
+const cons=(n,r)=>{if(CN[n])return CN[n];let h=0;for(const ch of n)h+=ch.charCodeAt(0);return Math.max(45,Math.min(92,r-8+h%11-5))};
+const OPT={
+'70s':{tp:'Colin Chapman:90:72;Ken Tyrrell:84:86;Teddy Mayer:78:76;Bernie Ecclestone:86:80;Frank Williams:76:72;Luca di Montezemolo:80:78',car:'Ferrari 312T:94:80;McLaren M23:88:78;Tyrrell P34:80:76;Lotus 77:78:72;Brabham BT45:72:68;March 761:66:66;Shadow DN5:68:62',en:'Ford Cosworth DFV:88:90;Ferrari Flat-12:92:68;Alfa Romeo Flat-12:78:60;Matra V12:80:66;Renault Gordini V6 Turbo:80:50',st:'Alastair Caldwell:84:80;Daniele Audetto:82:76;Peter Warr:78:74;Mauro Forghieri:90:80'},
+'80s':{tp:'Ron Dennis:92:88;Frank Williams:88:84;Flavio Briatore:80:75;Ken Tyrrell:78:82;Marco Piccinini:72:72;Peter Warr:72:70',car:'Williams FW11:94:86;McLaren MP4/2C:92:86;Lotus 98T:84:70;Ferrari F1/86:78:70;Benetton B186:76:66;Brabham BT55:62:58;Ligier JS27:68:66;Tyrrell 015:60:68',en:'Honda RA166 V6 Turbo:96:84;TAG-Porsche TTE PO1:92:90;Ferrari 033 V6 Turbo:86:70;BMW M12/13:90:66;Renault EF4:84:72;Ford Cosworth DFZ:68:90;Hart 415T:66:60',st:'Jo Ramírez:82:80;Gordon Murray:90:70;Patrick Head:90:86;Mauro Forghieri:84:72;Pat Symonds:78:76'},
+'90s':{tp:'Ron Dennis:92:90;Frank Williams:90:86;Flavio Briatore:88:78;Jean Todt:94:92;Eddie Jordan:76:72;Peter Sauber:72:84;Ken Tyrrell:68:80',car:'Williams FW18:97:90;Ferrari F310:84:70;Benetton B196:84:78;McLaren MP4/11:76:70;Jordan 196:68:70;Sauber C15:64:72;Tyrrell 024:58:68;Minardi M195:44:60',en:'Renault RS8:96:90;Ferrari 046/2:86:72;Mercedes-Benz FO110:84:78;Ford Zetec-R:80:78;Peugeot A14:72:64;Mugen-Honda MF-301:78:80;Yamaha OX11A:52:54',st:'Ross Brawn:97:92;Pat Symonds:88:84;Paddy Lowe:78:80;Steve Nichols:76:74'},
+'00s':{tp:'Jean Todt:95:92;Ron Dennis:90:88;Frank Williams:80:80;Flavio Briatore:86:78;Christian Horner:80:84;Mario Theissen:78:82;Ross Brawn:94:90;Eddie Jordan:60:70',car:'Ferrari F2004:98:94;Williams FW26:80:76;BAR 006:80:78;Renault R24:82:84;McLaren MP4-19:80:70;Sauber C23:66:76;Toyota TF104:64:70;Jaguar R5:58:62;Jordan EJ14:50:60;Minardi PS04B:40:58',en:'Ferrari 053:98:88;Mercedes FO110Q:90:76;BMW P84:94:70;Renault RS24:86:84;Honda RA004E:84:76;Toyota RVX-04:80:70;Cosworth CA2004:68:70',st:'Ross Brawn:98:94;Pat Symonds:88:84;Neil Martin:74:76;Chris Dyer:76:80;Sam Michael:70:74'},
+'10s':{tp:'Toto Wolff:96:92;Christian Horner:92:88;Maurizio Arrivabene:78:74;Mattia Binotto:84:76;Zak Brown:82:82;Otmar Szafnauer:72:78;Guenther Steiner:74:78',car:'Mercedes W10:98:94;Ferrari SF90:92:80;Red Bull RB15:90:84;McLaren MCL34:80:84;Renault R.S.19:76:74;Toro Rosso STR14:70:76;Racing Point RP19:72:78;Haas VF-19:64:66;Alfa Romeo C38:66:76;Williams FW42:44:60',en:'Mercedes M10 EQ Power+:98:92;Ferrari 064:92:76;Honda RA619H:84:74;Renault E-Tech 19:78:76',st:'Hannah Schmitz:90:90;James Vowles:92:88;Ruth Buscombe:72:76;Bernie Collins:78:80'},
+'20s':{tp:'Toto Wolff:92:90;Christian Horner:92:86;Andrea Stella:92:92;Frédéric Vasseur:86:82;Mike Krack:74:78;James Vowles:78:82;Guenther Steiner:72:72;Laurent Mekies:82:84',car:'Red Bull RB20:96:88;McLaren MCL38:96:90;Ferrari SF-24:92:86;Mercedes W15:88:90;Aston Martin AMR24:78:80;Alpine A524:64:72;Haas VF-24:70:72;RB VCARB 01:70:76;Williams FW46:66:76;Sauber C44:54:66',en:'Mercedes M15 E Performance:92:90;Ferrari 066/12:90:82;Honda RBPTH001:92:86;Renault E-Tech RE24:74:76',st:'Hannah Schmitz:94:90;Ben Waterhouse:84:84;Ruth Buscombe:78:76;Bernie Collins:80:80'},
+'26':{tp:'Toto Wolff:90:88;Andrea Stella:94:92;Laurent Mekies:80:80;Frédéric Vasseur:86:82;Jonathan Wheatley:82:84;Ayao Komatsu:80:82;Andy Cowell:80:84',car:'McLaren MCL40:92:88;Mercedes W17:94:90;Red Bull RB22:90:82;Ferrari SF-26:90:84;Williams FW48:76:80;Aston Martin AMR26:72:74;Haas VF-26:68:74;Audi R26:70:70;Alpine A526:66:74;Racing Bulls VCARB 03:70:76;Cadillac MAC-26:62:70',en:'Mercedes 2026 PU:94:88;Ferrari 2026 PU:90:84;Honda 2026 PU:88:80;Red Bull Ford 2026 PU:86:76;Audi 2026 PU:80:72',st:'Hannah Schmitz:94:90;Ben Waterhouse:84:84;Bernie Collins:80:80;Ruth Buscombe:78:76'}};
+const realOpts=(k,e)=>{let L;if(k=='pc')L=GRID[e.id].t.map(t=>({n:t.n+(e.id=='70s'||e.id=='80s'?' mechanics':' pit crew'),r:Math.max(40,Math.min(98,Math.round(t.s+R(-5,5)))),k:Math.round(t.k)}));else L=OPT[e.id][k].split(';').map(x=>{const[a,b,c]=x.split(':');return{n:a,r:+b,k:+c}});return L.sort(()=>Math.random()-.5).slice(0,3)};
+const tier=r=>r>=82?'Elite':r>=68?'Solid':'Budget';
+const gen=s=>Array.from({length:3},()=>{const r=RI(48,96),k=RI(45,96);return{n:s.g(),r,k}});
+let S={};
+const bar=(l,v,c='')=>`<div class="bar ${c}">${l}<i><u style="width:${v}%"></u></i><span>${v}</span></div>`;
+function home(){S={};app.innerHTML=`<h2>Choose your era</h2><p class="s">Pick the decade you want to race in. Season length, scoring and reliability follow that era.</p>
+<div class="grid">${ERAS.map((e,i)=>`<button class="card era" onclick="startBuild(${i})"><div class="y">${e.y}</div><div class="m">${e.n}</div><div class="m" style="margin-top:8px;color:var(--ink)">${e.races} races</div></button>`).join('')}</div>`}
+function startBuild(i){const e=ERAS[i],g=GRID[e.id],pool=g.t.flatMap(t=>t.d).concat(g.res).sort(()=>Math.random()-.5);
+S={era:e,step:0,team:{},opts:SLOTS.map((s,j)=>j<2?pool.slice(j*3,j*3+3).map(d=>({n:d.n,r:d.r,k:cons(d.n,d.r)})):realOpts(s.k,e)),name:'My Team'};build()}
+function build(){const{era,step,team}=S,done=step>=SLOTS.length;
+const sl=`<div class="slots">${SLOTS.map((s,i)=>`<div class="slot ${team[s.k]?'f':i==step?'on':''}"><small>${s.l}</small>${team[s.k]?`<strong>${team[s.k].n}</strong>`:'—'}</div>`).join('')}</div>`;
+if(done){app.innerHTML=`<h2>Your team is ready</h2><p class="s">${era.y} season · ${era.races} races</p>${sl}<p>Team name</p><input id="tn" value="${S.name}" maxlength="22"><div class="row"><button class="btn" onclick="S.name=$('#tn').value||'My Team';startSeason()">Start season</button><button class="btn g" onclick="home()">Start over</button></div>`;return}
+const s=SLOTS[step];
+app.innerHTML=`<h2>${era.y} · ${s.l}</h2><p class="s">Slot ${step+1} of ${SLOTS.length}. Pick one of three.</p>${sl}<div class="grid">${S.opts[step].map((o,i)=>`<button class="card opt" onclick="choose(${i})"><h3>${o.n}</h3><div class="t">${tier(o.r)}</div>${bar('Performance',o.r)}${bar(step<2?'Consistency':'Reliability',o.k,'r')}</button>`).join('')}</div>`}
+function choose(i){S.team[SLOTS[S.step].k]=S.opts[S.step][i];S.step++;build()}
+function startSeason(){const e=S.era,t=S.team;
+const g=GRID[e.id],taken=[t.d1.n,t.d2.n],rs=g.res.filter(d=>!taken.includes(d.n));
+const ai=g.t.map(x=>({...x,pts:0,w:0,d:x.d.map(d=>taken.includes(d.n)?(rs.shift()||{n:'Reserve Driver',r:60}):d)}));
+const me={n:S.name,me:1,pts:0,w:0,k:(t.car.k+t.en.k+t.pc.k)/3};
+const base=.3*t.car.r+.22*t.en.r+.1*t.st.r+.05*t.pc.r+.05*t.tp.r;
+S.me=me;S.base=base;S.ai=ai;S.D={};ai.forEach(a=>a.d.forEach(d=>S.D[d.n]={n:d.n,t:a.n,pts:0,w:0}));[t.d1,t.d2].forEach(d=>S.D[d.n]={n:d.n,t:S.name,pts:0,w:0,me:1});S.race=0;S.log=[];S.dr={d1:{n:t.d1.n,pts:0},d2:{n:t.d2.n,pts:0}};S.stat={wins:0,pod:0,dnf:0,best:99};S.last=null;sim()}
+function runRace(){const e=S.era,t=S.team,cars=[];
+const add=(team,name,s,k,isMe,key,c)=>{const dnf=Math.random()<e.dnf*(1.6-(k*.75+c*.25)/70),sg=(1.5+(100-c)*.2)*(isMe?1.2-t.st.r/250:1);cars.push({team,name,isMe,key,dnf,sc:dnf?-1e9+Math.random():s*3.5+G()*sg*2})};
+S.ai.forEach(a=>a.d.forEach(d=>add(a,d.n,.72*a.s+.28*d.r+R(-3,3),a.k,0,0,cons(d.n,d.r))));
+['d1','d2'].forEach(d=>add(S.me,t[d].n,S.base+.28*t[d].r+R(-3,3),S.me.k,1,d,t[d].k));
+cars.sort((a,b)=>b.sc-a.sc);
+cars.forEach((c,i)=>{c.pos=i+1;const p=c.dnf?0:(e.pts[i]||0);c.p=p;c.team.pts+=p;const D=S.D[c.name];D.pts+=p;if(i==0&&!c.dnf)D.w++;if(c.isMe)S.dr[c.key].pts+=p;
+if(i==0&&!c.dnf)c.team.w++;
+if(c.isMe){if(c.dnf)S.stat.dnf++;else{S.stat.best=Math.min(S.stat.best,c.pos);if(c.pos==1)S.stat.wins++;if(c.pos<=3)S.stat.pod++}}});
+S.last=cars;S.race++}
+const all=()=>[...S.ai,S.me].sort((a,b)=>b.pts-a.pts||b.w-a.w);
+const alld=()=>Object.values(S.D).sort((a,b)=>b.pts-a.pts||b.w-a.w);
+const dtb=()=>`<div class="sc"><table><tr><th>#</th><th>Driver</th><th>Pts</th></tr>${alld().map((x,i)=>`<tr class="${x.me?'me':''}"><td>${i+1}</td><td>${x.n} <span class="tag">${x.t}</span></td><td>${x.pts}</td></tr>`).join('')}</table></div>`;
+function sim(){const e=S.era,done=S.race>=e.races,L=S.last,st=all();
+const tbl=st.map((x,i)=>`<tr class="${x.me?'me':''}"><td>${i+1}</td><td>${x.n}</td><td>${x.pts}</td></tr>`).join('');
+const res=L?L.slice(0,10).map(c=>`<tr class="${c.isMe?'me':''}"><td>${c.pos}</td><td>${c.name}${c.dnf?' (DNF)':''}</td><td>${c.team.n}</td><td>${c.p}</td></tr>`).join(''):'';
+const mine=L?L.filter(c=>c.isMe).map(c=>`${S.team[c.key].n}: ${c.dnf?'DNF':'P'+c.pos}`).join(' · '):'';
+if(done)return final();
+app.innerHTML=`<div class="top"><div><h2>${S.name}</h2><span class="tag">${e.y} season · Race ${S.race} / ${e.races}${S.race<e.races?' · next: '+TRACKS[S.race%24]+' GP':''}</span></div><div class="row" style="margin:0"><button class="btn" onclick="runRace();sim()">Next race</button><button class="btn g" onclick="while(S.race<S.era.races)runRace();sim()">Sim to end</button></div></div>
+<div class="prog"><u style="width:${S.race/e.races*100}%"></u></div>
+<div class="two"><div class="card"><b>${L?TRACKS[(S.race-1)%24]+' GP · top 10':'Awaiting lights out'}</b>${L?`<div class="sc"><table><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Pts</th></tr>${res}</table></div><p class="tag">Your cars — ${mine}</p>`:'<p class="s">Press Next race to start your season.</p>'}</div>
+<div class="card"><b>Constructors’ standings</b><div class="sc"><table><tr><th>#</th><th>Team</th><th>Pts</th></tr>${tbl}</table></div></div></div>
+<div class="card" style="margin-top:12px"><b>Drivers’ standings</b>${dtb()}</div>`}
+function final(){const st=all(),pos=st.indexOf(S.me)+1,e=S.era,sfx=n=>n+(['th','st','nd','rd'][(n%100>10&&n%100<14)?0:Math.min(n%10,4)%4]||'th');
+const champ=pos==1;
+S.txt=`🏁 24-P1 · ${e.y} season\n${S.name} finished ${sfx(pos)} in the Constructors’ Championship${champ?' 🏆':''}\n${S.me.pts} pts · ${S.stat.wins} wins · ${S.stat.pod} podiums · ${S.stat.dnf} DNFs\nDrivers: ${S.team.d1.n} (${S.dr.d1.pts}) & ${S.team.d2.n} (${S.dr.d2.pts})\nCan you beat me?`;
+const tbl=st.map((x,i)=>`<tr class="${x.me?'me':''}"><td>${i+1}</td><td>${x.n}</td><td>${x.pts}</td></tr>`).join('');
+app.innerHTML=`<p class="tag">${e.y} season complete</p><div class="big">${champ?'CHAMPIONS':sfx(pos)}</div><h2 style="margin-top:6px">${S.name}</h2>
+<div class="stats"><div><b>${S.me.pts}</b>points</div><div><b>${S.stat.wins}</b>wins</div><div><b>${S.stat.pod}</b>podiums</div><div><b>${S.stat.best==99?'–':'P'+S.stat.best}</b>best finish</div><div><b>${S.stat.dnf}</b>DNFs</div></div>
+<div class="two"><div class="card"><b>Constructors’ final</b><div class="sc"><table><tr><th>#</th><th>Team</th><th>Pts</th></tr>${tbl}</table></div></div>
+<div class="card"><b>Your drivers</b><div class="sc"><table><tr><th>Driver</th><th></th><th>Pts</th></tr><tr><td>${S.dr.d1.n}</td><td></td><td>${S.dr.d1.pts}</td></tr><tr><td>${S.dr.d2.n}</td><td></td><td>${S.dr.d2.pts}</td></tr></table></div><pre style="white-space:pre-wrap;font:inherit;font-size:13px;color:var(--mute);margin:12px 0 0">${S.txt}</pre></div></div>
+<div class="card" style="margin-top:12px"><b>Drivers’ final standings</b>${dtb()}</div>
+<div class="row"><button class="btn" id="sh" onclick="share()">Share result</button><button class="btn g" onclick="home()">New season</button></div>`}
+async function share(){const b=$('#sh');try{if(navigator.share){await navigator.share({title:'24-P1',text:S.txt});return}}catch(e){if(e&&e.name==='AbortError')return}
+try{await navigator.clipboard.writeText(S.txt);b.textContent='Copied to clipboard ✓'}catch(e){b.textContent='Select the text above to copy'}}
+home();
+</script></body></html>
